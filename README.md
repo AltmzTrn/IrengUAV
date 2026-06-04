@@ -8,6 +8,6 @@ This project was started in early 2024 by Altamis Tristan to implement direct, l
 Currently, the primary active development branch of this firmware focuses on a sub-100g brushed quadcopter utilizing an STM32F103C8T6 as the main bare-metal flight controller.  
 
 ## Archived Versions
-Development starts as early as January 2024, however, it was just a weekend project at the time and so all of the updates, commits, and versions were updated on Google Drive instead. The archive folder here stores all of the previously developed firmwares for various types of Airframes from 2024 to 2025. 
+Development originally began merely as a weekend project as early as January 2024. Early updates, commits, and versions were initially logged and stored on Google Drive. The ```/archive``` folder in this repository stores all of the previously developed firmwares for various types of experimental Airframes from 2024 to 2025. 
 
 Altamis Tristan 2026.06.05
