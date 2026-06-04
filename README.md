@@ -10,4 +10,6 @@ Currently, the primary active development branch of this firmware focuses on a s
 ## Archived Versions
 Development originally began merely as a weekend project as early as January 2024. Early updates, commits, and versions were initially logged and stored on Google Drive. The ```/archive``` folder in this repository stores all of the previously developed firmwares for various types of experimental Airframes from 2024 to 2025. 
 
-Altamis Tristan 2026.06.05
+
+
+_Altamis Tristan -- 2026.06.05_
