@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quadcopter Controller</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0px auto;
+      padding-top: 30px;
+      background-color: #f0f0f0;
+    }
+    table { 
+      margin-left: auto;
+      margin-right: auto;
+    }
+    td {
+      padding: 8px;
+    }
+    .button {
+      background-color: #000000;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      text-align: center;
+      display: inline-block;
+      font-size: 18px;
+      margin: 6px 3px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .joystick-container {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .joystick {
+      width: 150px;
+      height: 150px;
+      background-color: #ddd;
+      border-radius: 50%;
+      position: relative;
+      border: 2px solid #333;
+    }
+    .joystick-handle {
+      width: 50px;
+      height: 50px;
+      background-color: #333;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    video {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border: 2px solid #333;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Personal Unmanned Aerial System</h1>
+  
+  <!-- Video Stream -->
+  <img src="" id="photo" alt="Video Stream">
+  
+  <!-- Joystick Controls -->
+  <div class="joystick-container">
+    <div class="joystick" id="joystick1">
+      <div class="joystick-handle"></div>
+    </div>
+    <div class="joystick" id="joystick2">
+      <div class="joystick-handle"></div>
+    </div>
+  </div>
+  
+  <table>
+    <tr><td align="center"><button class="button" onmousedown="toggleCheckbox('forward');" ontouchstart="toggleCheckbox('forward');">Forward</button></td></tr>
+    <tr><td align="center"><button class="button" onmousedown="toggleCheckbox('stop');" ontouchstart="toggleCheckbox('stop');">Stop</button></td></tr>
+  </table>
+
+  <script>
+    // Joystick 1 (x, y values from 0 to 255)
+    const joystick1 = document.getElementById('joystick1');
+    const joystickHandle1 = joystick1.querySelector('.joystick-handle');
+    let joystick1Position = { x: 127, y: 127 };
+
+    joystick1.addEventListener('touchmove', function (event) {
+      const touch = event.touches[0];
+      const rect = joystick1.getBoundingClientRect();
+      let x = touch.clientX - rect.left - joystick1.offsetWidth / 2;
+      let y = touch.clientY - rect.top - joystick1.offsetHeight / 2;
+
+      const radius = joystick1.offsetWidth / 2 - joystickHandle1.offsetWidth / 2;
+      const distance = Math.sqrt(x * x + y * y);
+      
+      if (distance > radius) {
+        x = (x / distance) * radius;
+        y = (y / distance) * radius;
+      }
+
+      joystickHandle1.style.transform = `translate(${x}px, ${y}px)`;
+      joystick1Position.x = Math.round((x / radius + 1) * 127.5);
+      joystick1Position.y = Math.round((y / radius + 1) * 127.5);
+      
+      sendJoystickData(joystick1Position.x, joystick1Position.y);
+    });
+
+    // Keep y value on release
+    joystick1.addEventListener('touchend', function () {
+      joystickHandle1.style.transform = `translate(-50%, ${joystick1Position.y}px)`;
+      joystick1Position.x = 127; // x resets to center
+      sendJoystickData(joystick1Position.x, joystick1Position.y);
+    });
+
+    // Joystick 2 (x2, y2 values from 0 to 255)
+    const joystick2 = document.getElementById('joystick2');
+    const joystickHandle2 = joystick2.querySelector('.joystick-handle');
+    let joystick2Position = { x2: 127, y2: 127 };
+
+    joystick2.addEventListener('touchmove', function (event) {
+      const touch = event.touches[0];
+      const rect = joystick2.getBoundingClientRect();
+      let x2 = touch.clientX - rect.left - joystick2.offsetWidth / 2;
+      let y2 = touch.clientY - rect.top - joystick2.offsetHeight / 2;
+
+      const radius = joystick2.offsetWidth / 2 - joystickHandle2.offsetWidth / 2;
+      const distance = Math.sqrt(x2 * x2 + y2 * y2);
+      
+      if (distance > radius) {
+        x2 = (x2 / distance) * radius;
+        y2 = (y2 / distance) * radius;
+      }
+
+      joystickHandle2.style.transform = `translate(${x2}px, ${y2}px)`;
+      joystick2Position.x2 = Math.round((x2 / radius + 1) * 127.5);
+      joystick2Position.y2 = Math.round((y2 / radius + 1) * 127.5);
+      
+      sendJoystick2Data(joystick2Position.x2, joystick2Position.y2);
+    });
+
+    joystick2.addEventListener('touchend', function () {
+      joystickHandle2.style.transform = 'translate(-50%, -50%)';
+      joystick2Position = { x2: 127, y2: 127 };
+      sendJoystick2Data(joystick2Position.x2, joystick2Position.y2);
+    });
+
+    // Function to send joystick1 data to ESP32
+    function sendJoystickData(x, y) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", `/joystick1?x=${x}&y=${y}`, true);
+      xhr.send();
+      console.log('Joystick 1:', x, y);  // Use this to pull x and y values
+    }
+
+    // Function to send joystick2 data to ESP32
+    function sendJoystick2Data(x2, y2) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", `/joystick2?x2=${x2}&y2=${y2}`, true);
+      xhr.send();
+      console.log('Joystick 2:', x2, y2);  // Use this to pull x2 and y2 values
+    }
+
+    // Video Stream
+    window.onload = function () {
+      document.getElementById("photo").src = window.location.href.slice(0, -1) + ":81/stream";
+    }
+
+    // Toggle control buttons
+    function toggleCheckbox(action) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/action?go=" + action, true);
+      xhr.send();
+    }
+  </script>
+</body>
+</html>

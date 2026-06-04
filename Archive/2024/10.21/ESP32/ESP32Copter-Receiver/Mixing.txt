@@ -1,0 +1,27 @@
+int8_t pitchVal = 0;
+int8_t rollVal = 0;
+uint8_t thrVal = 0;
+int8_t yawVal = 0;
+
+
+#define MOTOR_FR    0
+#define MOTOR_FL    33
+#define MOTOR_RR    32
+#define MOTOR_RL    2
+
+//controls mixing subsystem
+//primary motors
+int MOTOR_FR_VAL = 0 ;
+int MOTOR_FL_VAL = 0 ;
+int MOTOR_RR_VAL = 0 ;
+int MOTOR_RL_VAL = 0 ;
+
+MOTOR_FR_VAL = (0.85*thrVal)-(0.05*rollVal)+(0.05*pitchVal)+(0.05*yawVal);
+MOTOR_FL_VAL = (0.85*thrVal)+(0.05*rollVal)+(0.05*pitchVal)-(0.05*yawVal);
+MOTOR_RR_VAL = (0.85*thrVal)-(0.05*rollVal)-(0.05*pitchVal)-(0.05*yawVal);
+MOTOR_RL_VAL = (0.85*thrVal)+(0.05*rollVal)-(0.05*pitchVal)+(0.05*yawVal);
+
+analogWrite(MOTOR_FR, MOTOR_FR_VAL);//put on void loop
+analogWrite(MOTOR_FL, MOTOR_FL_VAL);//put on void loop
+analogWrite(MOTOR_RR, MOTOR_RR_VAL);//put on void loop
+analogWrite(MOTOR_RL, MOTOR_RL_VAL);//put on void loop
