@@ -1,0 +1,124 @@
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
+
+// Wi-Fi credentials
+const char* ssid = "asterville.freewifi@IEEE802.11ac";
+const char* password = "02175907227";
+
+WiFiUDP udp;
+unsigned int localPort = 8888;
+IPAddress local_IP(192,168,151,111);
+IPAddress gateway(192,168,151,1);
+IPAddress subnet(255,255,255,0);
+
+
+// CRSF constants
+#define CRSF_ADDRESS 0xC8
+#define CRSF_FRAMETYPE_RC_CHANNELS 0x16
+
+// 16 channels, 11 bits each
+uint16_t channels[16] = {1500, 1500, 1000, 2000,  // default values
+                         1000, 1000, 1000, 1000,
+                         1000, 1000, 1000, 1000,
+                         1000, 1000, 1000, 1000};
+
+uint8_t crc8(const uint8_t* data, int len) {
+  uint8_t crc = 0;
+  for (int i = 0; i < len; i++) {
+    crc ^= data[i];
+    for (int j = 0; j < 8; j++) {
+      if (crc & 0x80)
+        crc = (crc << 1) ^ 0xD5;
+      else
+        crc <<= 1;
+    }
+  }
+  return crc;
+}
+
+void sendCRSF() {
+  uint8_t frame[64];
+  int idx = 0;
+
+  frame[idx++] = CRSF_ADDRESS;
+
+  // Reserve space for length
+  int lenIndex = idx++;
+  frame[idx++] = CRSF_FRAMETYPE_RC_CHANNELS;
+
+  // Pack 16x 11-bit channels = 22 bytes
+  uint32_t bitBuffer = 0;
+  uint8_t bitCount = 0;
+  for (int ch = 0; ch < 16; ch++) {
+    uint16_t v = channels[ch];   // 1000-2000 range
+    v = constrain(v, 988, 2012); // standard CRSF limits
+    v = map(v, 988, 2012, 172, 1811); // CRSF internal scaling
+
+    bitBuffer |= ((uint32_t)v << bitCount);
+    bitCount += 11;
+
+    while (bitCount >= 8) {
+      frame[idx++] = bitBuffer & 0xFF;
+      bitBuffer >>= 8;
+      bitCount -= 8;
+    }
+  }
+
+  // Length = everything after length byte (type + payload + crc)
+  int payloadLen = idx - 2;
+  frame[lenIndex] = payloadLen + 1; // +1 for CRC
+
+  // CRC
+  frame[idx] = crc8(&frame[2], payloadLen);
+  idx++;
+
+  // Send frame
+  Serial.write(frame, idx);
+}
+
+void setup() {
+  Serial.begin(420000);  // CRSF baud rate
+
+  WiFi.config(local_IP, gateway, subnet);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
+
+  udp.begin(localPort);
+}
+void loop() {
+  int packetSize = udp.parsePacket();
+  if (packetSize) {
+    char buffer[128];
+    int len = udp.read(buffer, sizeof(buffer) - 1);
+    if (len > 0) {
+      buffer[len] = '\0';
+
+      // Sanitize input: remove [, ], and replace commas with spaces
+      for (int i = 0; i < len; i++) {
+        if (buffer[i] == '[' || buffer[i] == ']') buffer[i] = ' ';
+        if (buffer[i] == ',') buffer[i] = ' ';
+      }
+
+      // Parse space-separated integers into channels[]
+      int ch = 0;
+      char* token = strtok(buffer, " ");
+      while (token && ch < 16) {
+        int val = atoi(token);
+        if (val > 0) channels[ch] = val; // keep last value if atoi fails
+        ch++;
+        token = strtok(NULL, " ");
+      }
+    }
+  }
+
+  // Send CRSF frame every ~4ms (250Hz)
+  static uint32_t last = 0;
+  if (millis() - last > 4) {
+    sendCRSF();
+    last = millis();
+  }
+}
