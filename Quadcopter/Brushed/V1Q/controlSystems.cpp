@@ -4,7 +4,6 @@
 #include "actuators.h"
 
 //PID values
-
 //pitch
 #define PITCH_P 4.0f
 #define PITCH_I 0.8f
@@ -19,7 +18,7 @@
 #define YAW_D   0.05f
 
 //desire Values
-int16_t desVal[3]    = {0};
+int16_t desVal[3] = {0};
 //actual vlues
 int16_t actVal[3] = {0};
 //arm channel
@@ -42,8 +41,16 @@ void controlSystems_update() {
   float dt = (now - prevtime) / 1000.0f;
   if (dt <= 0) dt = 1e-3;
 
-  crsf_update(); // Update CRSF
-  IMU_update();  // Update IMU
+  IMU_update(); // Update State
+  crsf_update(); // Update Input
+
+  // Map attitude to 1000-2000 µs
+  float errVal[3] = {0};
+  for (uint8_t i=0;i<3;i++) {
+    actVal[i] = Attitude[i]; 
+    errVal[i] = desVal[i]-actVal[i];
+  }
+
 
   // Map CRSF channels to 1000–2000 µs
   uint16_t throttle = map(rcChannelValues[2], 172, 1811, 0, 255) ;  
@@ -51,13 +58,7 @@ void controlSystems_update() {
   desVal[1] = mapCRSFtoDEG(rcChannelValues[1]);
   desVal[2] = mapCRSFtoDEG(rcChannelValues[3]);
 
-  // Map attitude to 1000-2000 µs
-  float errVal[3] = {0};
-  for (uint8_t i=0;i<3;i++) {
-    actVal[i] = Attitude[i]; 
-    errVal[i] = desVal[i];//-actVal[i];
-  }
-
+  
   //stack to PID output value
   int16_t outroll = ROLL_P*errVal[0]+ROLL_I*errVal[0]*dt+ROLL_D*(errVal[0]-prevErrVal[0])/dt;
   int16_t outpitch = PITCH_P*errVal[1]+PITCH_I*errVal[1]*dt+PITCH_D*(errVal[1]-prevErrVal[1])/dt;
@@ -74,10 +75,10 @@ void controlSystems_update() {
     to_actuator[3] = throttle*0.4 + mapControlValuetoPWM(0 + outroll*0.4 + outpitch*0.4 - outyaw *0.4);     // Right servo    
   }
   else {
-    to_actuator[0] = 0;                      // Motor
-    to_actuator[1] = 0;            // Front servo
-    to_actuator[2] = 0;     // Left servo
-    to_actuator[3] = 0;     // Right servo  
+    to_actuator[0] = 0;
+    to_actuator[1] = 0;
+    to_actuator[2] = 0;
+    to_actuator[3] = 0;
   }
 
   // Optional:
