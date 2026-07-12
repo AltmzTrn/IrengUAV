@@ -6,12 +6,6 @@
 #include <Attitude_Indicator.h>
 #include <actuators.h>
 
-// Define actuator pins
-#define motorPin     PA1
-#define servoFPin    PA6
-#define servoRPin    PA7
-#define servoLPin    PB0
-
 extern uint16_t to_actuator[6];
 
 extern int16_t desVal[3];

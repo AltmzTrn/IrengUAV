@@ -26,4 +26,14 @@ void actuators_write() {
   writeServoMicros(servoPin, to_actuator[1]);
 }
 
+void encoder_read() {
+  unsigned long pulseDuration = pulseIn(encoderPin, HIGH, 5000);
+  if (pulseDuration>0) {
+    int angle = map(pulseDuration, 12,4084,0,4095);
+    angle = constrain(angle, 0, 4095);
+    float degrees = (angle/4095)*360.0;
+    
+  }
+}
+
 
