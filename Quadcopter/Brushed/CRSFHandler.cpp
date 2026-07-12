@@ -7,7 +7,7 @@ bool crsfFailsafe = true;
 
 #define CRSF_ADDRESS_FLIGHT_CONTROLLER 0xC8
 #define CRSF_FRAME_RC_CHANNELS_PACKED  0x16
-#define CRSF_FRAME_LENGTH              24 // 1 (addr) + 1 (len) + 1 (type) + 22 (payload)
+#define CRSF_FRAME_LENGTH              26 // 1 (addr) + 1 (len) + 1 (type) + 22 (payload)
 
 static uint8_t buffer[CRSF_FRAME_LENGTH];
 static uint8_t bufferIndex = 0;
