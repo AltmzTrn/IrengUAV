@@ -2,7 +2,7 @@
 #include "Attitude_Indicator.h"
 #include "actuators.h"
 #include "controlSystems.h"
-HardwareSerial telemSerial(PA10, PA9);
+HardwareSerial telemSerial(PA10, PA9); //RX on PA10, TX on PA9 on the STM32 not the peripherals
 
 //variable declaration
 bool blinkNow = true;
