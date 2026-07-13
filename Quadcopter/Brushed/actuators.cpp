@@ -4,13 +4,13 @@
 const int motorPins[] = {PA6, PA7, PB0, PB1};
 
 void actuators_setup() {
-    RCC->APB2ENR |= RCC_APN2ENR_IOPAEN|RCC_APB2ENR_IOPBEN
+    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN|RCC_APB2ENR_IOPBEN;
     RCC->APB2ENR |= RCC_APB1ENR_TIM3EN;
 
     GPIOA->CRL &= ~(0xFFu<<24);
     GPIOA->CRL |= (0x9u<<24)|(0x9u<<28); //PA6, PA7 -> 10MHz
 
-    GPIOB->CRL &= ~(0xFFu<<0;
+    GPIOB->CRL &= ~(0xFFu<<0);
     GPIOB->CRL |= (0x9u<<0)|(0x9u<<4); //PA6, PA7 -> 10MHz
 
     TIM3->PSC = 13;
@@ -28,5 +28,5 @@ void actuators_write() {
     TIM3->CCR1 = to_actuator[0]; //motor_R_F, PA6
     TIM3->CCR2 = to_actuator[1]; //motor_L_F, PA7
     TIM3->CCR3 = to_actuator[2]; //motor_R_R, PB0
-    TIM3->CCR3 = to_actuator[3]; //motor_L_R, PB1
+    TIM3->CCR4 = to_actuator[3]; //motor_L_R, PB1
 }

@@ -50,7 +50,7 @@ void IMU_update() {
   gyroDegS[2] = gyroZ / 131.0f;
 
   // Integrate gyroZ for yaw (angleZ)
-  angleZ += gyroDegS(2) * dt; // 131 = LSB sensitivity for 250dps
+  angleZ += gyroDegS[2] * dt; // 131 = LSB sensitivity for 250dps
 
   // Clamp angles to [-180, 180]
   if (angleZ > 180) angleZ -= 360;

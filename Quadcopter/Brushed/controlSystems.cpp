@@ -5,17 +5,17 @@
 
 //PID values
 //pitch
-static constexpr float PITCH_P 4.0f
-static constexpr float PITCH_I 0.8f
-static constexpr float PITCH_D 0.1f
+static constexpr float PITCH_P 4.0f;
+static constexpr float PITCH_I 0.8f;
+static constexpr float PITCH_D 0.1f;
 //roll
-static constexpr float ROLL_P  4.0f
-static constexpr float ROLL_I  0.8f
-static constexpr float ROLL_D  0.1f
+static constexpr float ROLL_P  4.0f;
+static constexpr float ROLL_I  0.8f;
+static constexpr float ROLL_D  0.1f;
 //yaw
-static constexpr float YAW_P   2.0f
-static constexpr float YAW_I   0.4f
-static constexpr float YAW_D   0.05f
+static constexpr float YAW_P   2.0f;
+static constexpr float YAW_I   0.4f;
+static constexpr float YAW_D   0.05f;
 static constexpr int16_t YAW_RATE_MAX = 6; // max yaw rate in deg s^-1
 
 //desire Values
@@ -68,13 +68,13 @@ void controlSystems_update() {
 
   //integral for the PID controller
   static float Integral[3] = {0};
-  for uint8_t (i = 0; i<3; i++) {
+  for (uint8_t i = 0; i<3; i++) {
     Integral[i] = constrain(Integral[i]+errVal[i]*dt,-50.0f,50.0f);
   } 
 
   //stack to PID output value
-  int16_t outroll = ROLL_P*errVal[0]+ROLL_I*Integral[0]*dt+ROLL_D*(errVal[0]-prevErrVal[0])/dt;
-  int16_t outpitch = PITCH_P*errVal[1]+PITCH_I*Integral[1]*dt+PITCH_D*(errVal[1]-prevErrVal[1])/dt;
+  int16_t outroll = ROLL_P*errVal[0]+ROLL_I*Integral[0]+ROLL_D*(errVal[0]-prevErrVal[0])/dt;
+  int16_t outpitch = PITCH_P*errVal[1]+PITCH_I*Integral[1]+PITCH_D*(errVal[1]-prevErrVal[1])/dt;
   int16_t outyaw = YAW_P*errVal[2]+YAW_I*Integral[2]+YAW_D*(errVal[2]-prevErrVal[2])/dt;
 
   //Armed state
