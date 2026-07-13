@@ -5,7 +5,7 @@ const int motorPins[] = {PA6, PA7, PB0, PB1};
 
 void actuators_setup() {
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN|RCC_APB2ENR_IOPBEN;
-    RCC->APB2ENR |= RCC_APB1ENR_TIM3EN;
+    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 
     GPIOA->CRL &= ~(0xFFu<<24);
     GPIOA->CRL |= (0x9u<<24)|(0x9u<<28); //PA6, PA7 -> 10MHz

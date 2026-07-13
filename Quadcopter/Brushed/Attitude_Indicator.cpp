@@ -7,6 +7,8 @@ int16_t accX, accY, accZ;
 int16_t gyroX, gyroY, gyroZ;
 float angleX, angleY, angleZ;
 int Attitude[3] = {0};
+float gyroDegS[3] = {0};
+
 
 unsigned long lastUpdateTime = 0;
 float dt = 0;

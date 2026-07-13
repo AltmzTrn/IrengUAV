@@ -5,17 +5,17 @@
 
 //PID values
 //pitch
-static constexpr float PITCH_P 4.0f;
-static constexpr float PITCH_I 0.8f;
-static constexpr float PITCH_D 0.1f;
+static constexpr float PITCH_P = 4.0f;
+static constexpr float PITCH_I = 0.8f;
+static constexpr float PITCH_D = 0.1f;
 //roll
-static constexpr float ROLL_P  4.0f;
-static constexpr float ROLL_I  0.8f;
-static constexpr float ROLL_D  0.1f;
+static constexpr float ROLL_P = 4.0f;
+static constexpr float ROLL_I = 0.8f;
+static constexpr float ROLL_D = 0.1f;
 //yaw
-static constexpr float YAW_P   2.0f;
-static constexpr float YAW_I   0.4f;
-static constexpr float YAW_D   0.05f;
+static constexpr float YAW_P  = 2.0f;
+static constexpr float YAW_I  = 0.4f;
+static constexpr float YAW_D  = 0.05f;
 static constexpr int16_t YAW_RATE_MAX = 6; // max yaw rate in deg s^-1
 
 //desire Values
