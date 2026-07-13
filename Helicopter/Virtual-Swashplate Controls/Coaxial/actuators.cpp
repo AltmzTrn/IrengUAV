@@ -4,7 +4,7 @@
 void writeServoMicros(uint8_t pin, uint16_t us) {
   analogWriteResolution(16);  // 0 - 65535
 
-  const uint32_t pwmFreq = 50;           // 50 Hz for servos and ESC
+  const uint32_t pwmFreq = 50;    // 50 Hz for servos and ESC
   const uint32_t timerPeriod = 1000000 / pwmFreq; // Period in microseconds (20ms)
 
   // Convert desired pulse width to duty
