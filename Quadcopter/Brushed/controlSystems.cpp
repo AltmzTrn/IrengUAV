@@ -5,17 +5,18 @@
 
 //PID values
 //pitch
-#define PITCH_P 4.0f
-#define PITCH_I 0.8f
-#define PITCH_D 0.1f
+static constexpr float PITCH_P 4.0f
+static constexpr float PITCH_I 0.8f
+static constexpr float PITCH_D 0.1f
 //roll
-#define ROLL_P  4.0f
-#define ROLL_I  0.8f
-#define ROLL_D  0.1f
+static constexpr float ROLL_P  4.0f
+static constexpr float ROLL_I  0.8f
+static constexpr float ROLL_D  0.1f
 //yaw
-#define YAW_P   2.0f
-#define YAW_I   0.4f
-#define YAW_D   0.05f
+static constexpr float YAW_P   2.0f
+static constexpr float YAW_I   0.4f
+static constexpr float YAW_D   0.05f
+static constexpr int16_t YAW_RATE_MAX = 6; // max yaw rate in deg s^-1
 
 //desire Values
 int16_t desVal[3] = {0};
@@ -26,8 +27,12 @@ uint16_t armChannel = 0;
 // write pulse width in microseconds
 uint16_t to_actuator[6] = {0};
 
-int16_t mapCRSFtoDEG(uint16_t crsf_val) {
-  return map(constrain(crsf_val, 172, 1811), 172, 1811, -30, 30);
+static int16_t mapCRSFtoRange(uint16_t crsf_val, int16_t outMin, int16_t outMax) {
+  return map(constrain(crsf_val, 172, 1811), 172, 1811, outMin, outMax);
+}
+
+static int16_t mapCRSFtoDEG(uint16_t crsf_val) {
+  return mapCRSFtoRange(crsf_val, -30, 30);
 }
 
 uint8_t mapControlValuetoPWM(int16_t att) {
@@ -44,35 +49,43 @@ void controlSystems_update() {
   IMU_update(); // Update State
   crsf_update(); // Update Input
 
-  // Map attitude to 1000-2000 µs
-  float errVal[3] = {0};
-  for (uint8_t i=0;i<3;i++) {
-    actVal[i] = Attitude[i]; 
-    errVal[i] = desVal[i]-actVal[i];
-  }
-
-
   // Map CRSF channels to 1000–2000 µs
   uint16_t throttle = map(rcChannelValues[2], 172, 1811, 0, 255) ;  
-  desVal[0] = mapCRSFtoDEG(rcChannelValues[0]);
-  desVal[1] = mapCRSFtoDEG(rcChannelValues[1]);
-  desVal[2] = mapCRSFtoDEG(rcChannelValues[3]);
+  desVal[0] = mapCRSFtoDEG(rcChannelValues[0]); //desired roll angle in deg
+  desVal[1] = mapCRSFtoDEG(rcChannelValues[1]); //desired pitch angle in deg
+  desVal[2] = mapCRSFtoDEG(rcChannelValues[3]); //desired yaw rate in deg s^-1
 
-  
+  //map Attitude to 1000–2000 µs
+  actVal[0] = Attitude[0];
+  actVal[1] = Attitude[1];
+  actVal[2] = Attitude[2];
+
+  // Map attitude to 1000-2000 µs
+  float errVal[3] = {0};
+  errVal[0] = desVal[0]-actVal[0];
+  errVal[1] = desVal[1]-actVal[1];
+  errVal[2] = desVal[2]-gyroDegS[2];
+
+  //integral for the PID controller
+  static float Integral[3] = {0};
+  for uint8_t (i = 0; i<3; i++) {
+    Integral[i] = constrain(Integral[i]+errVal[i]*dt,-50.0f,50.0f);
+  } 
+
   //stack to PID output value
-  int16_t outroll = ROLL_P*errVal[0]+ROLL_I*errVal[0]*dt+ROLL_D*(errVal[0]-prevErrVal[0])/dt;
-  int16_t outpitch = PITCH_P*errVal[1]+PITCH_I*errVal[1]*dt+PITCH_D*(errVal[1]-prevErrVal[1])/dt;
-  int16_t outyaw = desVal[2];//YAW_P*errVal[2]+YAW_I*errVal[2]+YAW_D*errVal[2];
+  int16_t outroll = ROLL_P*errVal[0]+ROLL_I*Integral[0]*dt+ROLL_D*(errVal[0]-prevErrVal[0])/dt;
+  int16_t outpitch = PITCH_P*errVal[1]+PITCH_I*Integral[1]*dt+PITCH_D*(errVal[1]-prevErrVal[1])/dt;
+  int16_t outyaw = YAW_P*errVal[2]+YAW_I*Integral[2]+YAW_D*(errVal[2]-prevErrVal[2])/dt;
 
   //Armed state
   armChannel = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[4]));
 
   if (armChannel > 128) {
     // Mix for actuators (you can tune the math later)
-    to_actuator[0] = throttle*0.4 + mapControlValuetoPWM(0 - outroll*0.4 - outpitch*0.4 - outyaw *0.4);                      // Motor
-    to_actuator[1] = throttle*0.4 + mapControlValuetoPWM(0 + outroll*0.4 - outpitch*0.4 + outyaw *0.4);            // Front servo
-    to_actuator[2] = throttle*0.4 + mapControlValuetoPWM(0 - outroll*0.4 + outpitch*0.4 + outyaw *0.4);     // Left servo
-    to_actuator[3] = throttle*0.4 + mapControlValuetoPWM(0 + outroll*0.4 + outpitch*0.4 - outyaw *0.4);     // Right servo    
+    to_actuator[0] = throttle*0.4 + mapControlValuetoPWM(0 - outroll*0.4 - outpitch*0.4 - outyaw *0.4);    // Front Right Motor
+    to_actuator[1] = throttle*0.4 + mapControlValuetoPWM(0 + outroll*0.4 - outpitch*0.4 + outyaw *0.4);    // Front Left Motor
+    to_actuator[2] = throttle*0.4 + mapControlValuetoPWM(0 - outroll*0.4 + outpitch*0.4 + outyaw *0.4);    // Rear Right Motor
+    to_actuator[3] = throttle*0.4 + mapControlValuetoPWM(0 + outroll*0.4 + outpitch*0.4 - outyaw *0.4);    // Rear Left Motor    
   }
   else {
     to_actuator[0] = 0;
@@ -90,11 +103,9 @@ void controlSystems_update() {
     to_actuator[j] = constrain(to_actuator[j], 0, 255);
   }
 
-
   actuators_write();
   prevtime = now;
   for (uint8_t i = 0;i<3;i++) {
     prevErrVal[i] = errVal[i];
   }
-
 }
