@@ -18,6 +18,10 @@ extern int16_t desVal[3];
 extern int16_t actVal[3];
 
 extern uint16_t armChannel;
+extern bool armedState;
+
+extern uint16_t modeChannel;
+extern char fltMode;
 
 void controlSystems_setup();
 void controlSystems_update();

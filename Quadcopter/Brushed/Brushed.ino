@@ -32,7 +32,7 @@ void loop(){
     telemSerial.print("Failsafe: ");
     telemSerial.print(crsfFailsafe ? "YES" : "NO");
     telemSerial.print(" | CH: ");
-    for (int i = 0; i < 5; ++i) // print 4 channels only for example
+    for (int i = 0; i < 6; ++i) // print 4 channels only for example
     {
       telemSerial.print(rcChannelValues[i]);
       telemSerial.print(" ");
@@ -64,10 +64,32 @@ void loop(){
     telemSerial.print(actVal[2]);
     telemSerial.println();
 
-    telemSerial.println(armChannel);
+    if (armedState) {
+      telemSerial.println("Armed");
+    }
+    else {
+      telemSerial.println("Disarmed");
+    }
+    if (fltMode='M') {
+      telemSerial.println("Flight Mode Manual");
+    }
+    else if (fltMode='A') {
+      telemSerial.println("Flight Mode Attitude Hold (Acro)");      
+    }
+    else if (fltMode='S') {
+      telemSerial.println("Flight Mode Stabilise");      
+    }
+
+    telemSerial.println("Motor PWM Values: ");
+    telemSerial.print("Motor Front - Left: ");
+    telemSerial.print(to_actuator[1]);
+    telemSerial.print(";   Motor Front - Right: ");
     telemSerial.println(to_actuator[0]);
-
-
+    telemSerial.print("Motor Rear - Left: ");
+    telemSerial.print(to_actuator[3]);
+    telemSerial.print(";   Motor Rear - Right: ");    
+    telemSerial.println(to_actuator[2]);
+    telemSerial.println("_");
   }
   
   //Blink

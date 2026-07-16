@@ -3,20 +3,28 @@
 #include "Attitude_Indicator.h"
 #include "actuators.h"
 
+//armed state
+bool armedState=true;
+
 //PID values
 //pitch
-static constexpr float PITCH_P = 4.0f;
-static constexpr float PITCH_I = 0.8f;
-static constexpr float PITCH_D = 0.1f;
+static constexpr float PITCH_P = 0.25f;
+static constexpr float PITCH_I = 0.05f;
+static constexpr float PITCH_D = 0.00625f;
 //roll
-static constexpr float ROLL_P = 4.0f;
-static constexpr float ROLL_I = 0.8f;
-static constexpr float ROLL_D = 0.1f;
+static constexpr float ROLL_P = 0.25f;
+static constexpr float ROLL_I = 0.05f;
+static constexpr float ROLL_D = 0.00625f;
 //yaw
-static constexpr float YAW_P  = 2.0f;
-static constexpr float YAW_I  = 0.4f;
-static constexpr float YAW_D  = 0.05f;
+static constexpr float YAW_P  = 0.0625f;
+static constexpr float YAW_I  = 0.0125f;
+static constexpr float YAW_D  = 0.003125f;
 static constexpr int16_t YAW_RATE_MAX = 6; // max yaw rate in deg s^-1
+
+//Initialise all Control Outputs
+int16_t outroll = 0;
+int16_t outpitch = 0;
+int16_t outyaw = 0;
 
 //desire Values
 int16_t desVal[3] = {0};
@@ -24,6 +32,10 @@ int16_t desVal[3] = {0};
 int16_t actVal[3] = {0};
 //arm channel
 uint16_t armChannel = 0;
+//flight mode channel
+uint16_t modeChannel = 0;
+//default flight mode
+char fltMode = 'M';
 // write pulse width in microseconds
 uint16_t to_actuator[6] = {0};
 
@@ -48,6 +60,11 @@ void controlSystems_update() {
 
   IMU_update(); // Update State
   crsf_update(); // Update Input
+  //Armed state
+  armChannel = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[4]));
+  //Flight Mode
+  modeChannel = rcChannelValues[5];
+
 
   // Map CRSF channels to 1000–2000 µs
   uint16_t throttle = map(rcChannelValues[2], 172, 1811, 0, 255) ;  
@@ -72,13 +89,22 @@ void controlSystems_update() {
     Integral[i] = constrain(Integral[i]+errVal[i]*dt,-50.0f,50.0f);
   } 
 
-  //stack to PID output value
-  int16_t outroll = ROLL_P*errVal[0]+ROLL_I*Integral[0]+ROLL_D*(errVal[0]-prevErrVal[0])/dt;
-  int16_t outpitch = PITCH_P*errVal[1]+PITCH_I*Integral[1]+PITCH_D*(errVal[1]-prevErrVal[1])/dt;
-  int16_t outyaw = YAW_P*errVal[2]+YAW_I*Integral[2]+YAW_D*(errVal[2]-prevErrVal[2])/dt;
-
-  //Armed state
-  armChannel = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[4]));
+  //Flight Mode Switching + stack to PID output value for stabilize
+  if (modeChannel<720) {
+    fltMode = 'M'; //manual
+    int16_t outroll = desVal[0];
+    int16_t outpitch = desVal[1];
+    int16_t outyaw = desVal[2];
+  }
+  else if (modeChannel>720 && modeChannel<1265) {
+    fltMode = 'A'; //Attitude Hold
+  }
+  else {
+    fltMode = 'S'; //Stabilise
+    int16_t outroll = ROLL_P*errVal[0]+ROLL_I*Integral[0]+ROLL_D*(errVal[0]-prevErrVal[0])/dt;
+    int16_t outpitch = PITCH_P*errVal[1]+PITCH_I*Integral[1]+PITCH_D*(errVal[1]-prevErrVal[1])/dt;
+    int16_t outyaw = YAW_P*errVal[2]+YAW_I*Integral[2]+YAW_D*(errVal[2]-prevErrVal[2])/dt;
+  }
 
   if (armChannel > 128) {
     // Mix for actuators (you can tune the math later)
@@ -86,12 +112,14 @@ void controlSystems_update() {
     to_actuator[1] = throttle*0.4 + mapControlValuetoPWM(0 + outroll*0.4 - outpitch*0.4 + outyaw *0.4);    // Front Left Motor
     to_actuator[2] = throttle*0.4 + mapControlValuetoPWM(0 - outroll*0.4 + outpitch*0.4 + outyaw *0.4);    // Rear Right Motor
     to_actuator[3] = throttle*0.4 + mapControlValuetoPWM(0 + outroll*0.4 + outpitch*0.4 - outyaw *0.4);    // Rear Left Motor    
+    armedState = true;
   }
   else {
     to_actuator[0] = 0;
     to_actuator[1] = 0;
     to_actuator[2] = 0;
     to_actuator[3] = 0;
+    armedState = false;
   }
 
   // Optional:
