@@ -70,13 +70,13 @@ void loop(){
     else {
       telemSerial.println("Disarmed");
     }
-    if (fltMode='M') {
+    if (fltMode=='M') {
       telemSerial.println("Flight Mode Manual");
     }
-    else if (fltMode='A') {
+    else if (fltMode=='A') {
       telemSerial.println("Flight Mode Attitude Hold (Acro)");      
     }
-    else if (fltMode='S') {
+    else if (fltMode=='S') {
       telemSerial.println("Flight Mode Stabilise");      
     }
 
