@@ -17,7 +17,7 @@ void crsf_setup() {
 }
 
 void crsf_update() {
-    while (crsfSerial.available()) {
+    if (crsfSerial.available()) {
         uint8_t byteIn = crsfSerial.read();
 
         buffer[bufferIndex++] = byteIn;
@@ -53,4 +53,5 @@ void crsf_update() {
             bufferIndex = 0; 
         }
     }
+    crsfFailsafe = true;
 }

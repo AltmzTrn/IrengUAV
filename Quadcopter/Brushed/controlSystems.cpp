@@ -63,7 +63,7 @@ void controlSystems_update() {
   //Armed state
   armChannel = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[4]));
   //Flight Mode
-  modeChannel = rcChannelValues[5];
+  modeChannel = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[4]));
 
 
   // Map CRSF channels to 1000–2000 µs
@@ -90,20 +90,21 @@ void controlSystems_update() {
   } 
 
   //Flight Mode Switching + stack to PID output value for stabilize
-  if (modeChannel<720) {
+  if (modeChannel<85) {
     fltMode = 'M'; //manual
     int16_t outroll = desVal[0];
     int16_t outpitch = desVal[1];
     int16_t outyaw = desVal[2];
   }
-  else if (modeChannel>720 && modeChannel<1265) {
-    fltMode = 'A'; //Attitude Hold
-  }
-  else {
+  else if (modeChannel>170) {
     fltMode = 'S'; //Stabilise
     int16_t outroll = ROLL_P*errVal[0]+ROLL_I*Integral[0]+ROLL_D*(errVal[0]-prevErrVal[0])/dt;
     int16_t outpitch = PITCH_P*errVal[1]+PITCH_I*Integral[1]+PITCH_D*(errVal[1]-prevErrVal[1])/dt;
     int16_t outyaw = YAW_P*errVal[2]+YAW_I*Integral[2]+YAW_D*(errVal[2]-prevErrVal[2])/dt;
+  }
+  else {
+    fltMode = 'A'; //Attitude Hold
+
   }
 
   if (armChannel > 128) {
