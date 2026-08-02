@@ -60,7 +60,7 @@ void controlSystems_update() {
   armChannel = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[4]));
 
   if (armChannel > 1500) {
-    to_actuator[0] = 300 + throttle;                      // Motor
+    to_actuator[0] = throttle/2+;                      // Motor
     to_actuator[1] = 1500 - outroll + outyaw;            // Yaw Vane Servo 
   }
   else {

@@ -5,8 +5,8 @@
 #include <controlSystems.h>
 
 // Pin definitions
-#define motorPin PA1
-#define servoPin PB0
+#define MainRotorPin PA1
+#define TailRotorPin PB0
 #define encoderPin PA0
 
 

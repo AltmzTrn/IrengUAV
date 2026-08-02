@@ -13,8 +13,8 @@ void writeServoMicros(uint8_t pin, uint16_t us) {
 }
 
 void actuators_setup() {
-  pinMode(motorPin, OUTPUT);
-  pinMode(servoPin, OUTPUT);
+  pinMode(MainRotorPin, OUTPUT);
+  pinMode(TailRotorPin, OUTPUT);
 
   analogWriteFrequency(50);
 }
@@ -22,8 +22,8 @@ void actuators_setup() {
 
 void actuators_write() {
   // Write directly as microsecond PWM signals
-  writeServoMicros(motorPin, to_actuator[0]);
-  writeServoMicros(servoPin, to_actuator[1]);
+  writeServoMicros(MainRotorPin, to_actuator[0]);
+  writeServoMicros(TailRotorPin, to_actuator[1]);
 }
 
 void encoder_read() {
