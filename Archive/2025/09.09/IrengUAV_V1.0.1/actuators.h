@@ -5,15 +5,12 @@
 #include <controlSystems.h>
 
 // Pin definitions
-#define MainRotorPin PA1
-#define TailRotorPin PB0
-#define encoderPin PA0
-
+#define motorPin PA1
+#define servoFPin PA6
+#define servoRPin PA7
+#define servoLPin PB0
 
 extern void actuators_setup();
 extern void actuators_write();
-extern void encoder_read();
-
-
 
 #endif

@@ -1,13 +1,13 @@
 #include "CRSFHandler.h"
 
-HardwareSerial crsfSerial(PB11, PB10); // alternate should be "PA3, PA2" but ts pmo icl :broken_heart:
+HardwareSerial crsfSerial(PB11, PB10);
 
 int rcChannelValues[crsfProtocol::RC_CHANNEL_COUNT] = {0};
 bool crsfFailsafe = true;
 
 #define CRSF_ADDRESS_FLIGHT_CONTROLLER 0xC8
 #define CRSF_FRAME_RC_CHANNELS_PACKED  0x16
-#define CRSF_FRAME_LENGTH              26 // 1 (addr) + 1 (len) + 1 (type) + 22 (payload)
+#define CRSF_FRAME_LENGTH              24 // 1 (addr) + 1 (len) + 1 (type) + 22 (payload)
 
 static uint8_t buffer[CRSF_FRAME_LENGTH];
 static uint8_t bufferIndex = 0;
@@ -17,14 +17,14 @@ void crsf_setup() {
 }
 
 void crsf_update() {
-    if (crsfSerial.available()) {
+    while (crsfSerial.available()) {
         uint8_t byteIn = crsfSerial.read();
 
         buffer[bufferIndex++] = byteIn;
 
-        // frame validation
+        // Check if we have enough to consider a valid frame
         if (bufferIndex >= CRSF_FRAME_LENGTH) {
-            // address and type
+            // Check address and type
             if (buffer[0] == CRSF_ADDRESS_FLIGHT_CONTROLLER &&
                 buffer[2] == CRSF_FRAME_RC_CHANNELS_PACKED) {
 
@@ -46,12 +46,11 @@ void crsf_update() {
                     }
                 }
 
-                crsfFailsafe = false;
+                crsfFailsafe = false; // Valid packet received
             }
 
 
-            bufferIndex = 0; 
+            bufferIndex = 0; // reset for next frame
         }
     }
-    crsfFailsafe = true;
 }

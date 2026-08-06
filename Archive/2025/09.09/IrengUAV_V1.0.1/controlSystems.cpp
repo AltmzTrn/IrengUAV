@@ -54,18 +54,23 @@ void controlSystems_update() {
   //stack to PID output value
   int16_t outroll = ROLL_P*errVal[0]+ROLL_I*errVal[0]+ROLL_D*errVal[0];
   int16_t outpitch = PITCH_P*errVal[1]+PITCH_I*errVal[1]+PITCH_D*errVal[1];
-  uint16_t outyaw = desVal[2];//YAW_P*errVal[2]+YAW_I*errVal[2]+YAW_D*errVal[2];
+  int16_t outyaw = desVal[2];//YAW_P*errVal[2]+YAW_I*errVal[2]+YAW_D*errVal[2];
 
   //Armed state
   armChannel = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[4]));
 
   if (armChannel > 1500) {
-    to_actuator[0] = throttle/2;                      // Motor
-    to_actuator[1] = (outyaw/4);                // Tail Rotor
+    // Mix for actuators (you can tune the math later)
+    to_actuator[0] = 300 + throttle;                      // Motor
+    to_actuator[1] = 1500 - outroll + outyaw;            // Front servo
+    to_actuator[2] = 1500 + outroll - outpitch + outyaw;     // Left servo
+    to_actuator[3] = 1500 + outroll + outpitch + outyaw;     // Right servo    
   }
   else {
-    to_actuator[0] = 0;                               // Motor
-    to_actuator[1] = 0;                   // Yaw Vane Servo
+    to_actuator[0] = 0;                      // Motor
+    to_actuator[1] = 1500 - outroll + outyaw;            // Front servo
+    to_actuator[2] = 1500 + outroll - outpitch + outyaw;     // Left servo
+    to_actuator[3] = 1500 + outroll + outpitch + outyaw;     // Right servo  
   }
 
   // Optional:
@@ -73,7 +78,9 @@ void controlSystems_update() {
   to_actuator[5] = mapCRSFtoDEG(rcChannelValues[6]); // Laser
 
   // Constrain outputs to valid PWM range
-  to_actuator[0] = constrain(to_actuator[0], 1000, 2000);
+  for (int j = 0; j < 6; j++) {
+    to_actuator[j] = constrain(to_actuator[j], 1000, 2000);
+  }
 
 
   actuators_write();
