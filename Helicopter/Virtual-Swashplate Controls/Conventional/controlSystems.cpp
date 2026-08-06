@@ -3,7 +3,7 @@
 #include "Attitude_Indicator.h"
 #include "actuators.h"
 
-//PID values
+//PID values, not used yet (manual mode first)
 //pitch
 #define PITCH_P 1
 #define PITCH_I 1
@@ -34,9 +34,14 @@ uint16_t mapControlValuetoPWM(int16_t att) {
   return map(att, -180, 180, 1000, 2000);
 }
 
+void controlSystems_setup() {
+  to_actuator[0] = 0;
+  to_actuator[1] = 0;
+}
+
 void controlSystems_update() {
   crsf_update(); // Update CRSF
-  IMU_update();  // Update IMU
+  IMU_update();  // Update IMU, not used yet (manual mode)
 
   // Map CRSF channels to 1000–2000 µs
   uint16_t throttle = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[2])) ;
@@ -44,37 +49,25 @@ void controlSystems_update() {
   desVal[1] = mapCRSFtoDEG(rcChannelValues[1]);
   desVal[2] = mapCRSFtoDEG(rcChannelValues[3]);
 
-  // Map attitude to 1000-2000 µs
-  int16_t errVal[3] = {0};
-  for (uint8_t i=0;i<3;i++) {
-    actVal[i] = Attitude[i]; //mapATTtoPWM(Attitude[i]);
-    errVal[i] = mapControlValuetoPWM(desVal[i]+actVal[i]) - 1500;
-  }
-
-  //stack to PID output value
-  int16_t outroll = ROLL_P*errVal[0]+ROLL_I*errVal[0]+ROLL_D*errVal[0];
-  int16_t outpitch = PITCH_P*errVal[1]+PITCH_I*errVal[1]+PITCH_D*errVal[1];
-  uint16_t outyaw = desVal[2];//YAW_P*errVal[2]+YAW_I*errVal[2]+YAW_D*errVal[2];
+  actVal[0] = Attitude[0];
+  actVal[1] = Attitude[1];
+  actVal[2] = Attitude[2];
 
   //Armed state
   armChannel = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[4]));
 
   if (armChannel > 1500) {
-    to_actuator[0] = throttle/2;                      // Motor
-    to_actuator[1] = (outyaw/4);                // Tail Rotor
+    to_actuator[0] = throttle;                                 // Main Rotor ESC
+    to_actuator[1] = map(desVal[2], -180, 180, 0, 65535);       // Tail Rotor, stick proportional for now
   }
   else {
     to_actuator[0] = 0;                               // Motor
-    to_actuator[1] = 0;                   // Yaw Vane Servo
+    to_actuator[1] = 0;                               // Tail Rotor
   }
 
-  // Optional:
-  to_actuator[4] = mapCRSFtoDEG(rcChannelValues[5]); // CamAngle
-  to_actuator[5] = mapCRSFtoDEG(rcChannelValues[6]); // Laser
-
-  // Constrain outputs to valid PWM range
+  // Constrain outputs to valid ranges
   to_actuator[0] = constrain(to_actuator[0], 1000, 2000);
-
+  to_actuator[1] = constrain(to_actuator[1], 0, 65535);
 
   actuators_write();
 }

@@ -1,6 +1,6 @@
 #include "CRSFHandler.h"
 
-HardwareSerial crsfSerial(PB11, PB10); // alternate should be "PA3, PA2" but ts pmo icl :broken_heart:
+HardwareSerial crsfSerial(PA10, PA9); // alternate should be "PA3, PA2" but ts pmo icl :broken_heart:
 
 int rcChannelValues[crsfProtocol::RC_CHANNEL_COUNT] = {0};
 bool crsfFailsafe = true;
@@ -49,9 +49,7 @@ void crsf_update() {
                 crsfFailsafe = false;
             }
 
-
             bufferIndex = 0; 
         }
     }
-    crsfFailsafe = true;
 }

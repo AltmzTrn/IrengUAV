@@ -3,24 +3,24 @@
 #include "Attitude_Indicator.h"
 #include "actuators.h"
 #include "controlSystems.h"
-HardwareSerial telemSerial(PA10, PA9);
+//HardwareSerial telemSerial(PA12, PA11);
 
 //variable declaration
 bool blinkNow = true;
 
 void setup() {
   pinMode(PC13, OUTPUT);
-  telemSerial.begin(115200);
+  Serial.begin(115200);
   delay(500);
-  telemSerial.println("Initializing IMU...");
+  Serial.println("Initializing IMU...");
   IMU_init();
-  telemSerial.println("IMU Ready");
-  telemSerial.println("Starting CRSF...");
+  Serial.println("IMU Ready");
+  Serial.println("Starting CRSF...");
   crsf_setup();
-  telemSerial.println("CRSF Ready");
+  Serial.println("CRSF Ready");
   actuators_setup();
   //controlSystems_setup();
-  telemSerial.println("Actuator Ready");
+  Serial.println("Actuator Ready");
 }
 
 void loop(){
@@ -30,43 +30,43 @@ void loop(){
   static unsigned long lastPrint = 0;
   if (millis() - lastPrint > 500) {
     lastPrint = millis();
-    telemSerial.print("Failsafe: ");
-    telemSerial.print(crsfFailsafe ? "YES" : "NO");
-    telemSerial.print(" | CH: ");
+    Serial.print("Failsafe: ");
+    Serial.print(crsfFailsafe ? "YES" : "NO");
+   Serial.print(" | CH: ");
     for (int i = 0; i < 4; ++i) // print 4 channels only for example
     {
-      telemSerial.print(rcChannelValues[i]);
-      telemSerial.print(" ");
+      Serial.print(rcChannelValues[i]);
+      Serial.print(" ");
     }
-    telemSerial.println();
+    Serial.println();
 
-    telemSerial.print("Roll: ");
-    telemSerial.print(Attitude[0]);
-    telemSerial.print(", Pitch: ");
-    telemSerial.print(Attitude[1]);
-    telemSerial.print(" , Yaw: ");
-    telemSerial.print(Attitude[2]);
-    telemSerial.println();
+    Serial.print("Roll: ");
+    Serial.print(Attitude[0]);
+    Serial.print(", Pitch: ");
+    Serial.print(Attitude[1]);
+    Serial.print(" , Yaw: ");
+    Serial.print(Attitude[2]);
+    Serial.println();
     
-    telemSerial.print("desval: ");
-    telemSerial.print(desVal[0]);
-    telemSerial.print(", ");
-    telemSerial.print(desVal[1]);
-    telemSerial.print(", ");
-    telemSerial.print(desVal[2]);
-    telemSerial.println();
+    Serial.print("desval: ");
+    Serial.print(desVal[0]);
+    Serial.print(", ");
+    Serial.print(desVal[1]);
+    Serial.print(", ");
+    Serial.print(desVal[2]);
+    Serial.println();
 
     
-    telemSerial.print("actval: ");
-    telemSerial.print(actVal[0]);
-    telemSerial.print(", ");
-    telemSerial.print(actVal[1]);
-    telemSerial.print(", ");
-    telemSerial.print(actVal[2]);
-    telemSerial.println();
+    Serial.print("actval: ");
+    Serial.print(actVal[0]);
+    Serial.print(", ");
+    Serial.print(actVal[1]);
+    Serial.print(", ");
+    Serial.print(actVal[2]);
+    Serial.println();
 
-    telemSerial.println(armChannel);
-    telemSerial.println(to_actuator[0]);
+    Serial.println(armChannel);
+    Serial.println(to_actuator[0]);
 
 
   }
