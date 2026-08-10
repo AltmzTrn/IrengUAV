@@ -1,6 +1,6 @@
 #include "CRSFHandler.h"
 
-HardwareSerial crsfSerial(PA10, PA9); // alternate should be "PA3, PA2" but ts pmo icl :broken_heart:
+HardwareSerial crsfSerial(PA10, PA9); //Other uarts already for other stuff
 
 int rcChannelValues[crsfProtocol::RC_CHANNEL_COUNT] = {0};
 bool crsfFailsafe = true;
@@ -8,25 +8,44 @@ bool crsfFailsafe = true;
 #define CRSF_ADDRESS_FLIGHT_CONTROLLER 0xC8
 #define CRSF_FRAME_RC_CHANNELS_PACKED  0x16
 #define CRSF_FRAME_LENGTH              26 // 1 (addr) + 1 (len) + 1 (type) + 22 (payload)
+#define CRSF_FAILSAFE_TIMEOUT_MS       300 // no valid frame in this long, assume link lost
 
 static uint8_t buffer[CRSF_FRAME_LENGTH];
 static uint8_t bufferIndex = 0;
+static uint32_t lastFrameTime = 0;
+
+static uint8_t crsf_crc8(uint8_t crc, uint8_t a) {
+    crc ^= a;
+    for (uint8_t i = 0; i < 8; ++i) {
+        crc = (crc & 0x80) ? (crc << 1) ^ 0xD5 : (crc << 1);
+    }
+    return crc;
+}
 
 void crsf_setup() {
     crsfSerial.begin(420000, SERIAL_8N1);
 }
 
 void crsf_update() {
-    if (crsfSerial.available()) {
+    while (crsfSerial.available()) {
         uint8_t byteIn = crsfSerial.read();
+
+        // resync: don't start a frame on anything but a valid address byte
+        if (bufferIndex == 0 && byteIn != CRSF_ADDRESS_FLIGHT_CONTROLLER) {
+            continue;
+        }
 
         buffer[bufferIndex++] = byteIn;
 
         // frame validation
         if (bufferIndex >= CRSF_FRAME_LENGTH) {
-            // address and type
-            if (buffer[0] == CRSF_ADDRESS_FLIGHT_CONTROLLER &&
-                buffer[2] == CRSF_FRAME_RC_CHANNELS_PACKED) {
+            // type + CRC over type/payload (bytes 2..24), checked against byte 25
+            uint8_t crc = 0;
+            for (uint8_t i = 2; i < CRSF_FRAME_LENGTH - 1; ++i) {
+                crc = crsf_crc8(crc, buffer[i]);
+            }
+
+            if (buffer[2] == CRSF_FRAME_RC_CHANNELS_PACKED && crc == buffer[CRSF_FRAME_LENGTH - 1]) {
 
                 // Parse 16 channels packed as 11-bit
                 uint8_t *payload = &buffer[3]; // skip addr, len, type
@@ -47,9 +66,15 @@ void crsf_update() {
                 }
 
                 crsfFailsafe = false;
+                lastFrameTime = millis();
             }
 
             bufferIndex = 0; 
         }
+    }
+
+    // no good frame in a while, link is actually lost
+    if (millis() - lastFrameTime > CRSF_FAILSAFE_TIMEOUT_MS) {
+        crsfFailsafe = true;
     }
 }
