@@ -39,6 +39,7 @@ uint16_t mapCRSFtoDuty(uint16_t crsf_val) {
   return map(constrain(crsf_val, 172, 1811), 172, 1811, 0, 65535);
 }
 
+
 void controlSystems_setup() {
   to_actuator[0] = 0;
   to_actuator[1] = 0;
@@ -48,8 +49,7 @@ void controlSystems_update() {
   crsf_update(); // Update CRSF
   IMU_update();  // Update IMU, not used yet (manual mode)
 
-  // Main rotor throttle as plain duty (toy ESC), not 1000-2000us
-  uint16_t throttle = mapCRSFtoDuty(rcChannelValues[2]);
+  uint16_t throttle = mapControlValuetoPWM(rcChannelValues[2]);
   desVal[0] = mapCRSFtoDEG(rcChannelValues[0]);
   desVal[1] = mapCRSFtoDEG(rcChannelValues[1]);
   desVal[2] = mapCRSFtoDEG(rcChannelValues[3]);
@@ -66,7 +66,7 @@ void controlSystems_update() {
     to_actuator[1] = map(desVal[2], -180, 180, 0, 65535);       // Tail Rotor, stick proportional for now
   }
   else {
-    to_actuator[0] = 0;                               // Motor
+    to_actuator[0] = 1000;                               // Motor
     to_actuator[1] = 0;                               // Tail Rotor
   }
 

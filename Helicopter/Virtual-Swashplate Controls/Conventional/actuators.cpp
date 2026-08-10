@@ -21,7 +21,7 @@ void actuators_setup() {
 
 void actuators_write() {
   // Write directly as microsecond PWM signals
-  analogWrite(MainRotorPin, to_actuator[0]);
+  writeServoMicros(MainRotorPin, to_actuator[0]);
   analogWrite(TailRotorPin, to_actuator[1]);
 }
 
