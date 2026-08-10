@@ -49,7 +49,7 @@ void controlSystems_update() {
   crsf_update(); // Update CRSF
   IMU_update();  // Update IMU, not used yet (manual mode)
 
-  uint16_t throttle = mapControlValuetoPWM(rcChannelValues[2]);
+  uint16_t throttle = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[2]));
   desVal[0] = mapCRSFtoDEG(rcChannelValues[0]);
   desVal[1] = mapCRSFtoDEG(rcChannelValues[1]);
   desVal[2] = mapCRSFtoDEG(rcChannelValues[3]);

@@ -9,6 +9,7 @@
 bool blinkNow = true;
 
 void setup() {
+  delay(3000);
   pinMode(PC13, OUTPUT);
   Serial.begin(115200);
   delay(500);
