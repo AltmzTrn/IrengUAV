@@ -5,16 +5,16 @@
 
 //PID values, not used yet (manual mode first)
 //pitch
-#define PITCH_P 1
-#define PITCH_I 1
+#define PITCH_P 0.5
+#define PITCH_I 0
 #define PITCH_D 0
 //roll
 #define ROLL_P 0.5
-#define ROLL_I 0.5
+#define ROLL_I 0
 #define ROLL_D 0
 //yaw
 #define YAW_P 0.5
-#define YAW_I 0.5
+#define YAW_I 0
 #define YAW_D 0
 
 //desire Values

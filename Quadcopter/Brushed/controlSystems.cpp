@@ -9,17 +9,20 @@ bool armedState=true;
 //PID values
 //pitch
 static constexpr float PITCH_P = 0.25f;
-static constexpr float PITCH_I = 0.05f;
-static constexpr float PITCH_D = 0.00625f;
+static constexpr float PITCH_I = 0.0f;
+static constexpr float PITCH_D = 0.0f;
 //roll
 static constexpr float ROLL_P = 0.25f;
-static constexpr float ROLL_I = 0.05f;
-static constexpr float ROLL_D = 0.00625f;
+static constexpr float ROLL_I = 0.0f;
+static constexpr float ROLL_D = 0.0f;
 //yaw
 static constexpr float YAW_P  = 0.0625f;
-static constexpr float YAW_I  = 0.0125f;
-static constexpr float YAW_D  = 0.003125f;
+static constexpr float YAW_I  = 0.0f;
+static constexpr float YAW_D  = 0.0f;
 static constexpr int16_t YAW_RATE_MAX = 6; // max yaw rate in deg s^-1
+
+//idle throttle offset (adjust this value down from 127 until motors idle comfortably)
+static constexpr uint8_t idlePWM = 115; 
 
 //Initialise all Control Outputs
 int16_t outroll = 0;
@@ -65,9 +68,8 @@ void controlSystems_update() {
   //Flight Mode
   modeChannel = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[5]));
 
-
   // Map CRSF channels to 1000–2000 µs
-  uint16_t throttle = map(rcChannelValues[2], 172, 1811, 0, 255) ;  
+  uint16_t throttle = map(rcChannelValues[2], 172, 1811, 0, 255);  
   desVal[0] = mapCRSFtoDEG(rcChannelValues[0]); //desired roll angle in deg
   desVal[1] = mapCRSFtoDEG(rcChannelValues[1]); //desired pitch angle in deg
   desVal[2] = mapCRSFtoDEG(rcChannelValues[3]); //desired yaw rate in deg s^-1
@@ -104,15 +106,17 @@ void controlSystems_update() {
   }
   else {
     fltMode = 'A'; //Attitude Hold
-
   }
 
   if (armChannel > 128) {
-    // Mix for actuators (you can tune the math later)
-    to_actuator[0] = throttle*0.4 + mapControlValuetoPWM(0 - outroll*0.4 - outpitch*0.4 - outyaw *0.4);    // Front Right Motor
-    to_actuator[1] = throttle*0.4 + mapControlValuetoPWM(0 + outroll*0.4 - outpitch*0.4 + outyaw *0.4);    // Front Left Motor
-    to_actuator[2] = throttle*0.4 + mapControlValuetoPWM(0 - outroll*0.4 + outpitch*0.4 + outyaw *0.4);    // Rear Right Motor
-    to_actuator[3] = throttle*0.4 + mapControlValuetoPWM(0 + outroll*0.4 + outpitch*0.4 - outyaw *0.4);    // Rear Left Motor    
+    // Base throttle calculation incorporating adjustable idle offset
+    uint16_t baseThrottle = idlePWM + ((throttle * (255 - idlePWM)) / 255);
+
+    // Mix for actuators
+    to_actuator[0] = baseThrottle - outroll*0.4f - outpitch*0.4f - outyaw*0.4f;    // Front Right Motor
+    to_actuator[1] = baseThrottle + outroll*0.4f - outpitch*0.4f + outyaw*0.4f;    // Front Left Motor
+    to_actuator[2] = baseThrottle - outroll*0.4f + outpitch*0.4f + outyaw*0.4f;    // Rear Right Motor
+    to_actuator[3] = baseThrottle + outroll*0.4f + outpitch*0.4f - outyaw*0.4f;    // Rear Left Motor    
     armedState = true;
   }
   else {
