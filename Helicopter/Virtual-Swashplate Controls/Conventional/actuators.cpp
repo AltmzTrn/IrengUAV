@@ -15,13 +15,13 @@ void actuators_setup() {
   pinMode(TailRotorPin, OUTPUT);
 
   analogWriteResolution(16);  // 0 - 65535, shared by both pins
-  analogWriteFrequency(50);
+  analogWriteFrequency(490); // toy quad ESC wants Fast PWM (~480Hz), not 50Hz servo rate
 }
 
 
 void actuators_write() {
-  // Write directly as microsecond PWM signals
-  writeServoMicros(MainRotorPin, to_actuator[0]);
+  // both are plain proportional duty, not microsecond servo pulses
+  analogWrite(MainRotorPin, to_actuator[0]);
   analogWrite(TailRotorPin, to_actuator[1]);
 }
 
