@@ -62,7 +62,7 @@ void controlSystems_update() {
   armChannel = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[4]));
 
   if (armChannel > 1500) {
-    to_actuator[0] = throttle;                                 // Main Rotor
+    to_actuator[0] = throttle;                                 // Main Rotor, real 1000-2000us pulse
     to_actuator[1] = map(desVal[2], -180, 180, 0, 65535);       // Tail Rotor, stick proportional for now
   }
   else {
@@ -71,7 +71,7 @@ void controlSystems_update() {
   }
 
   // Constrain outputs to valid ranges
-  to_actuator[0] = constrain(to_actuator[0], 0, 65535);
+  to_actuator[0] = constrain(to_actuator[0], 1000, 2000);
   to_actuator[1] = constrain(to_actuator[1], 0, 65535);
 
   actuators_write();

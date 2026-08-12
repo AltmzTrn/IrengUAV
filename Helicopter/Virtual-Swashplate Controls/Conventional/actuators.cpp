@@ -2,8 +2,8 @@
 #include "controlSystems.h"
 
 void writeServoMicros(uint8_t pin, uint16_t us) {
-  const uint32_t pwmFreq = 50;    // 50 Hz for servos and ESC
-  const uint32_t timerPeriod = 1000000 / pwmFreq; // Period in microseconds (20ms)
+  const uint32_t pwmFreq = 490;   // Fast PWM refresh rate this ESC wants, not standard 50Hz servo rate
+  const uint32_t timerPeriod = 1000000 / pwmFreq; // Period in microseconds
 
   // Convert desired pulse width to duty
   uint32_t duty = (us * 65535UL) / timerPeriod;
@@ -15,13 +15,13 @@ void actuators_setup() {
   pinMode(TailRotorPin, OUTPUT);
 
   analogWriteResolution(16);  // 0 - 65535, shared by both pins
-  analogWriteFrequency(490); // toy quad ESC wants Fast PWM (~480Hz), not 50Hz servo rate
+  analogWriteFrequency(490);
 }
 
 
 void actuators_write() {
-  // both are plain proportional duty, not microsecond servo pulses
-  analogWrite(MainRotorPin, to_actuator[0]);
+  // main rotor still wants a real 1000-2000us pulse, just refreshed faster
+  writeServoMicros(MainRotorPin, to_actuator[0]);
   analogWrite(TailRotorPin, to_actuator[1]);
 }
 
