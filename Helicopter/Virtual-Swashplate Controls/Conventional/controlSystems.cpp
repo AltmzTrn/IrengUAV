@@ -48,6 +48,7 @@ void controlSystems_setup() {
 void controlSystems_update() {
   crsf_update(); // Update CRSF
   IMU_update();  // Update IMU, not used yet (manual mode)
+  encoder_read(); // update rotor position
 
   uint16_t throttle = mapControlValuetoPWM(mapCRSFtoDEG(rcChannelValues[2]));
   desVal[0] = mapCRSFtoDEG(rcChannelValues[0]);
